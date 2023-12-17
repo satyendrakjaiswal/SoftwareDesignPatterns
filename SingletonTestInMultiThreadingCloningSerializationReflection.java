@@ -1,4 +1,6 @@
 import java.io.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 class Singleton implements Serializable, Cloneable {
 
@@ -8,6 +10,10 @@ class Singleton implements Serializable, Cloneable {
 
     // Private constructor to prevent instantiation from external classes
     private Singleton() {
+        // Protect against reflection
+        if (instance != null) {
+            throw new IllegalStateException("Singleton instance already created. Use getInstance() method.");
+        }
         // Initialize properties as needed
         data = "Initial data";
     }
@@ -47,7 +53,7 @@ class Singleton implements Serializable, Cloneable {
 }
 
 // test clas to test Singleton class
-public class SingletonTest {
+public class SingletonTestInMultiThreadingCloningSerializationReflection {
 
     public static void main(String[] args) {
         // Test multi-threading scenario
@@ -58,6 +64,9 @@ public class SingletonTest {
 
         // Test cloning scenario
         testCloning();
+
+        //Test reflection scenario
+        testReflection();
     }
 
     private static void testMultiThreading() {
@@ -120,6 +129,28 @@ public class SingletonTest {
             Singleton clonedSingleton = (Singleton) Singleton.getInstance().clone();
         } catch (CloneNotSupportedException e) {
             System.out.println("Cloning attempt failed: " + e.getMessage());
+        }
+    }
+
+    private static void testReflection() {
+        try {
+            // Get the Singleton class
+            Class<Singleton> singletonClass = Singleton.class;
+
+            // Access the private constructor
+            Constructor<Singleton> constructor = singletonClass.getDeclaredConstructor();
+
+            // Allow access to the private constructor
+            constructor.setAccessible(true);
+
+            // Create an instance using reflection
+            Singleton singleton = constructor.newInstance();
+
+            // Now you have a new instance, which breaks the Singleton pattern
+            System.out.println("Reflection created Singleton instance: " + singleton);
+
+        } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+            System.out.println("Exception in Singleton instance creation using Reflection : " + e);
         }
     }
 }
